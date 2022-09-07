@@ -1,9 +1,12 @@
 /**
  * @description       : 
- * @author            : ChangeMeIn@UserSettingsUnder.SFDoc
- * @group             : 
- * @last modified on  : 09-06-2022
- * @last modified by  : ChangeMeIn@UserSettingsUnder.SFDoc
+ * -------------------
+ * 1- blockage la de la modification du statut « Draft » à « Active » 
+ * et affichage d'un message d’erreur invitant l’utilisateur à saisir des produits avant d’activer l’order.
+ * 2- vérification qu’il n’y a aucun order rattaché à Account
+ * S’il y a aucun autre order rattaché à ce Account, la case Active__c sera décochée si elle a été cochée
+ * @author            : Ibaa
+ * @last modified on  : 09-07-2022
 **/
 
 public with sharing class OrderTriggerHandler {
@@ -40,9 +43,9 @@ public with sharing class OrderTriggerHandler {
 			if (ord.AccountId !=null)
 				ordset.add(ord.AccountId);
 		}
-		// Create list and query orders
+		// Créer une list et requêter les orders
 		List<Order> ResultList =[SELECT AccountId, Account.Active__c
-		                           FROM Order
+	   							FROM Order
 		                          WHERE AccountId IN :ordset];
 
 		// S'il y a des orders attachées à Account, la case reste cochée

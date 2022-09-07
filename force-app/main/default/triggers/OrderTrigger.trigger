@@ -1,9 +1,11 @@
 /**
  * @description       : 
- * @author            : ChangeMeIn@UserSettingsUnder.SFDoc
- * @group             : 
- * @last modified on  : 09-06-2022
- * @last modified by  : ChangeMeIn@UserSettingsUnder.SFDoc
+ * --------------------
+ * 1- trigger qui se déclenche pour appeler la classe apex OrderTriggerHandler.checkOrdersOnAccountToUpdateSatus
+ * 2- trigger qui se déclenche pour appeler la classe apex OrderTriggerHandler.uncheckActiveCheckbox
+ * @author            : Ibaa
+ * @last modified on  : 09-07-2022
+
 **/
 trigger OrderTrigger on Order (before update, after delete) {
 
