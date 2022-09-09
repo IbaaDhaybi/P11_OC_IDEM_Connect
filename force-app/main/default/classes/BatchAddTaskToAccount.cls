@@ -2,44 +2,37 @@
  * @description       : batch qui récupère les comptes n’ayant pas d’order associés ni des tâches de rappel 
  * et crée des tâches et les rattachent à ce compte.
  * @author            : Ibaa
- * @last modified on  : 09-07-2022
+ * @last modified on  : 09-09-2022
 **/
-global  class BatchAddTaskToAccount implements Database.Batchable<sObject>
-{
+global  class BatchAddTaskToAccount implements Database.Batchable<sObject>{
   
-    global Database.QueryLocator start(Database.BatchableContext info)
-    {
-      // Requeter seulement les Accounts sans orders afin de créer des taches de rappels aux differents propriétaires des Accounts 
-      return Database.getQueryLocator('Select OwnerId, (Select Id FROM Orders), (Select Id FROM Tasks WHERE Subject=\'Call\') FROM Account');
+  global Database.QueryLocator start(Database.BatchableContext info){ 
+    //Selection des Accounts avec les orders et Tasks
+    return Database.getQueryLocator('SELECT OwnerId, (SELECT Id FROM Orders), (SELECT Id FROM Tasks WHERE Subject=\'Call\') FROM Account');
+}
 
-    }
-
-    global void execute (Database.BatchableContext info , List<Account> activity)
-    {
-        List <Task> updateAllTasks = new List<Task>();
-        for (Account account : activity) 
-        {
-            if (account.Orders.size()==0 && account.Tasks.size()==0 )
-            {
-                Task newCallTasks = new Task
-                (
-                  OwnerId = account.OwnerId,
-                  Subject = 'Call',
-                  Status = 'Nouvelle',
-                  Priority = 'Normal',
-                  IsReminderSet = true ,
-                  WhatId = account.Id ,
-                  ReminderDateTime = System.now()+5
-                );
-                updateAllTasks.add(newCallTasks);
-            }
+global void execute(Database.BatchableContext info, List<Account> scope){
+    // création d'une liste de Task
+    List<Task> taskList = new List<Task>();
+    //Vérification s'il existe des orders et des tasks sur la fiche d'account
+    for(Account acc: scope){
+        if(acc.Orders.size() == 0 && acc.Tasks.size() == 0){
+            // Création d'un Task avec les champs nécessaires
+            Task createTask = new Task(
+                OwnerId = acc.OwnerId,
+                Subject = 'Call',
+                Status = 'Nouvelle',
+                Priority = 'Normal',
+                IsReminderSet = true,
+                WhatId = acc.Id,
+                ReminderDateTime = System.now()+5
+            );
+            taskList.add(createTask);
         }
-        insert updateAllTasks;
-
     }
-
-    global void finish (Database.BatchableContext info)
-    {
-
-    }
+    insert taskList;
+}
+global void finish(Database.BatchableContext info){
+    
+}
 }

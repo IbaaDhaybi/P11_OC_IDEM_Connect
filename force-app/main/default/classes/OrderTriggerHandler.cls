@@ -6,67 +6,78 @@
  * 2- vérification qu’il n’y a aucun order rattaché à Account
  * S’il y a aucun autre order rattaché à ce Account, la case Active__c sera décochée si elle a été cochée
  * @author            : Ibaa
- * @last modified on  : 09-07-2022
+ * @last modified on  : 09-09-2022
 **/
 
-public with sharing class OrderTriggerHandler {
-    public static void checkOrdersOnAccountToUpdateSatus(List<Order> ordersList) {
-        //Creation d'une Order ID Set
-        Set<Id> ordSet = new Set<Id>();
-        // parcourir la liste des orders
-        for (Order ord :ordersList){
-            ordset.add(ord.Id);
-            //stocker les anciennes valeurs de Order dans une Map
-            Order oldOrder = (Order)Trigger.oldMap.get(ord.Id);
-            //récupérer les orders avec les produits
-            List<OrderItem> orderItemList = [SELECT OrderId, Order.Status
-                                            FROM OrderItem
-                                           WHERE OrderId IN :ordset];
-
-            //s'il n'y a pas de produits sur la fiche d'Order et que le statut change de 'Draft' en 'Active' 
-            //un message d'erreur s'affichera et la mise à jour du statut sera bloquée
-            if (orderItemList.size() == 0 && oldOrder.Status == 'Draft' && ord.Status == 'Active'){
-                ord.addError('You should have at least one product on Order to update status.');
-            }  
+public class OrderTriggerHandler {
+    
+    public static void noStatusUpdateIfNoOrders(Map<Id,Order> orderOld, Map<Id,Order> orderNew) {
+       //Création d'une liste vide d'id de Order
+        Set<Id> idOrder = new Set<Id>();
+        for(Order orderN : orderNew.values()) {
+            //Faire correspondre l'ID des anciens et des nouveaux
+            Order orderO = orderOld.get(orderN.Id);
+            //Si le statut a changé et il est sur active 
+            //-> Ajout de l'id des nouveaux order dans le set
+            if(orderN.status != orderO.Status && orderN.Status == 'active') {
+                idOrder.add(orderN.Id);
+            }
         }
-
+        //Selection de l'ID des orders a condition qu'il soit dans le set
+        List<Order> orderListAndItems = [SELECT Id,(SELECT Id FROM OrderItems)
+                                        FROM Order WHERE Id IN : idOrder];
+        //vérification que le set n'est pas vide
+        if(idOrder != null && idOrder.size() > 0) {
+            for(Order nOrder : orderListAndItems) {
+                //Si pas de  produits sur la fiche order 
+                //-> un message d'erreur s'affiche
+                if(nOrder.OrderItems.size() == 0 || nOrder.OrderItems == null) {
+                    orderNew.get(nOrder.Id).addError('You should have at least one product on Order to update status.');
+                }
+            }
+        }
     }
-
-    public static void uncheckActiveCheckbox(List<Order> ordersList){
-        // Créer une Map des Accounts et Id
-		map<id, Account> updateMap =new Map<id, Account>();
-        // Créer un set  d'order ID
-		set<ID> ordset =new Set<ID>();
-
-		// Parcourir la liste des orders concernées par le trigger
-		for (Order ord :ordersList){
-			if (ord.AccountId !=null)
-				ordset.add(ord.AccountId);
-		}
-		// Créer une list et requêter les orders
-		List<Order> ResultList =[SELECT AccountId, Account.Active__c
-	   							FROM Order
-		                          WHERE AccountId IN :ordset];
-
-		// S'il y a des orders attachées à Account, la case reste cochée
-		if (ResultList !=null && ResultList.size() >0){
-			for (Order res :ResultList){
-				Account acc = new Account();
-				acc.Id =(id)res.get('AccountId');
-				acc.Active__c =true;
-				updateMap.put(acc.Id, acc);
-			}
-
-		// S'il n'y a pas d'orders attachées à Account, la case est décochée
-		} else{
-			for (id idSet :ordset){
-				Account acc = new Account();
-				acc.Id =idSet;
-				acc.Active__c = false;
-				updateMap.put(acc.Id, acc);
-			}
-		}
-		update updateMap.values();
-	}
-
+    public static void uncheckActiveCheckbox(List<Order> orderNewList){
+        //Création d'une liste d'account
+        List<Account> AccUpdate = new List<Account>();
+        //Création d'une liste  de id d'account
+        Set<Id> idAccount = new Set<Id>();
+        for(Order o : orderNewList) {
+            if(o.AccountId != null) {
+                //ajout des id de Account à l'objet order
+                idAccount.add(o.AccountId);
+            }
+        }
+         //Création d'une liste vide pour les ID des Account avec Orders
+         //Selection de l'ID des Accounts, des orders et du champs champs active_c
+        List<Account> AccountAndOrders = [SELECT Id, (SELECT Id, AccountId FROM Orders),
+                                            Active__c FROM Account WHERE Id IN : idAccount];
+        
+        //vérification que le set ID n'est pas vide
+        if(idAccount.size() > 0){
+            for(Account a : AccountAndOrders) {
+                //Si il n'y a aucun orders lié a ce compte
+                if(a.orders == null || a.orders.size() == 0) {
+                    //vérification si le champs active est sur true(coché)
+                if(a.Active__c == true){
+                    //si oui -> Assignation sur false
+                    a.Active__c = false;
+                    //ajout des comptes dans la liste
+                    AccUpdate.add(a);
+                    }
+                }
+                //Si il existe un order ou plus sur Account
+                //et le checkbox est décoché -> on le coche
+                else {
+                    if(a.Active__c == false) {
+                        a.Active__c = true;
+                        AccUpdate.add(a);
+                    }
+                }
+            }
+         }
+         if(AccUpdate.size() > 0) {
+            update AccUpdate;
+         }
     }
+}
