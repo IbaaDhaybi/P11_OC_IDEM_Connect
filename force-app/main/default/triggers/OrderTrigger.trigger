@@ -4,7 +4,7 @@
  * 1- trigger qui se déclenche pour appeler la classe apex OrderTriggerHandler.checkOrdersOnAccountToUpdateSatus
  * 2- trigger qui se déclenche pour appeler la classe apex OrderTriggerHandler.uncheckActiveCheckbox
  * @author            : Ibaa
- * @last modified on  : 09-09-2022
+ * @last modified on  : 09-13-2022
 
 **/
 trigger OrderTrigger on Order (before update, after update, after delete) { 
@@ -13,10 +13,12 @@ trigger OrderTrigger on Order (before update, after update, after delete) {
         OrderTriggerHandler.noStatusUpdateIfNoOrders(Trigger.oldMap, Trigger.newMap);
     }
 
-    if (Trigger.isAfter && Trigger.isUpdate)  {
+    if (Trigger.isAfter)  {
+        if (Trigger.isUpdate){
         OrderTriggerHandler.uncheckActiveCheckbox(Trigger.new);
-    }
-    if(Trigger.isAfter && Trigger.isDelete) {
+        }
+        if(Trigger.isDelete) {
         OrderTriggerHandler.uncheckActiveCheckbox(Trigger.old);
+        }
     }
 }

@@ -2,13 +2,13 @@
  * @description       : batch qui récupère les comptes n’ayant pas d’order associés ni des tâches de rappel 
  * et crée des tâches et les rattachent à ce compte.
  * @author            : Ibaa
- * @last modified on  : 09-09-2022
+ * @last modified on  : 09-13-2022
 **/
 global  class BatchAddTaskToAccount implements Database.Batchable<sObject>{
   
   global Database.QueryLocator start(Database.BatchableContext info){ 
     //Selection des Accounts avec les orders et Tasks
-    return Database.getQueryLocator('SELECT OwnerId, (SELECT Id FROM Orders), (SELECT Id FROM Tasks WHERE Subject=\'Call\') FROM Account');
+    return Database.getQueryLocator('SELECT OwnerId, (SELECT Id FROM Orders), (SELECT Id FROM Tasks WHERE Subject=\'Call\') FROM Account WHERE LastModifiedDate = LAST_MONTH');
 }
 
 global void execute(Database.BatchableContext info, List<Account> scope){
