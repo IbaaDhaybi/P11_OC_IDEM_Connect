@@ -1,7 +1,7 @@
 /**
  * @description       : classe de test pour créer les données pour les tests
  * @author            : Ibaa
- * @last modified on  : 09-09-2022
+ * @last modified on  : 09-13-2022
 **/
 
 @isTest
@@ -78,7 +78,7 @@ public class TestDataFactory{
         List<Task> CreatedTasks = new List<Task>();
         
         for (Integer i = 0; i < numberOfAccount; i++) {
-            Account accts = new Account(Name = 'testAccount' + i); 
+            Account accts = new Account(Name = 'testAccount' + i ); 
             createdAccount.add(accts);
         }
         insert createdAccount; 

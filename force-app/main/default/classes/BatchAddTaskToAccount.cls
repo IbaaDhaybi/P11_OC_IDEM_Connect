@@ -7,10 +7,9 @@
 global  class BatchAddTaskToAccount implements Database.Batchable<sObject>{
   
   global Database.QueryLocator start(Database.BatchableContext info){ 
-    //Selection des Accounts avec les orders et Tasks
-    return Database.getQueryLocator('SELECT OwnerId, (SELECT Id FROM Orders), (SELECT Id FROM Tasks WHERE Subject=\'Call\') FROM Account WHERE LastModifiedDate = LAST_MONTH');
+    //Selection des Accounts avec les orders et Tasks quqnd le champs Active_c de Account est décoché
+    return Database.getQueryLocator('SELECT OwnerId, (SELECT Id FROM Orders), (SELECT Id FROM Tasks WHERE Subject=\'Call\') FROM Account WHERE Active__c = false');
 }
-
 global void execute(Database.BatchableContext info, List<Account> scope){
     // création d'une liste de Task
     List<Task> taskList = new List<Task>();
