@@ -2,7 +2,7 @@
  * @description       : classe de test pour tester les fonctionalités de la classe OrderTriggerHandler
  * et le trigger associé
  * @author            : Ibaa
- * @last modified on  : 09-09-2022
+ * @last modified on  : 09-19-2022
 **/
 
 @isTest
@@ -57,14 +57,10 @@ private class OrderTriggerTest{
         List<Order> dataOrder = [SELECT AccountId FROM Order];
         for(Account account : dataAccount){
             for(Order order : dataOrder){
-                   if(account.Id == order.AccountId){
-                    System.assertEquals(True, account.Active__c);
-                }else{
                     System.assertEquals(False, account.Active__c);
                 }
             }
         }
-    }
 
     @isTest
 	static void testUpdateActiveCheckboxProductOnOrder(){
